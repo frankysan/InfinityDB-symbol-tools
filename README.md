@@ -8,9 +8,13 @@ assets.
 
 ## Current scope
 
-The initial version contains a **read-only validator** for the
-`InfinityDB raw symbol acquisition requests` v1 format. It does **not**
-download symbols, build an asset ZIP, or modify InfinityDB.
+The package validates the `InfinityDB raw symbol acquisition requests`
+v1 format without network access by default. An explicit `--acquire` run
+fetches the specified **raw** upstream SVG bytes, retains the existing
+deterministic `SYMBOLS ...zip` format and writes version-3 snapshot
+provenance bound to the supplied Army ZIP. It also records fetched and
+HTTP-404-unavailable URLs in a separate `.raw-report.json` report.
+It does not modify InfinityDB.
 
 The application repository remains authoritative for:
 - Which Army, legacy and static declarations contribute symbol URLs.
@@ -18,11 +22,11 @@ The application repository remains authoritative for:
 - Reviewed overrides, canonical SVG transformations, deduplication, fonts,
   browser mapping, publication and release packaging.
 
-This source repository may eventually consume the validated request set to
-retrieve raw SVG bytes and produce an immutable `SYMBOLS ...zip` with
-version-3 provenance bound to its input Army ZIP. That cutover is **not**
-implemented or approved yet; the working InfinityDB symbol pipeline is
-unchanged.
+The raw retrieval/provenance implementation is **not yet a pipeline cutover**.
+It does not implement override propagation, reuse of verified upstream caches,
+or the full `army-symbol-build.json` contract required by InfinityDB's
+current symbol processing and resume stages. The in-tree pipeline remains
+unchanged and operational.
 
 ## Source handoff
 
@@ -42,8 +46,22 @@ infinity-symbol-source --plan symbol-source-plan.json --army "JSON example.zip"
 
 This verifies the exact `inputArtifact` basename and byte SHA-256, schema,
 lowercase hash, one approved HTTPS host/path, deterministic URL ordering,
-unique archive paths and portable relative `.svg` destinations. It performs
-no HTTP requests.
+unique archive paths and portable relative `.svg` destinations. Without
+`--acquire`, it performs **no HTTP requests**.
+
+To explicitly acquire and archive raw SVGs:
+
+```powershell
+infinity-symbol-source --plan symbol-source-plan.json --army "JSON example.zip" --acquire --destination data/raw/symbols --manifest-dir data/manifests/snapshots
+```
+
+Acquisition validates returned XML without altering the source bytes. Only
+HTTP 404 is recorded as unavailable; other HTTP errors, invalid SVGs and
+unexpected redirects fail without publishing a new ZIP/manifest. Existing
+archives are never overwritten. The companion `.raw-report.json` identifies
+source URLs, hashes and unavailable assets, but is **not** the application's
+processed-symbol build manifest. The new raw archive must not yet be substituted
+into an InfinityDB `build_symbols --resume` run without that build manifest.
 
 A v1 plan contains `format`, `formatVersion`, `inputArtifact`
 (`name`, `sha256`), `sourceDocumentCount` and sorted `requests`
@@ -60,15 +78,15 @@ python -m pip install -e ".[test]"
 python -m pytest -q
 ```
 
-All tests run offline. GitHub Actions checks the installed package on
-Windows, Ubuntu and macOS. No other repository is needed to install or test
-this validator.
+All tests run offline using simulated HTTP responses. GitHub Actions checks
+the installed package on Windows, Ubuntu and macOS. No other repository is
+needed to install or test this acquisition stage.
 
 ## Cutover prerequisites
 
-Before replacing raw acquisition in InfinityDB: retain missing-asset
-handling, cached original SVG identities, override propagation, ambiguous
-source-name diagnostics and source pinning; implement a verifiable offline
-result manifest; validate byte-level archive and v3 provenance parity and
-the unchanged symbol publication workflow. No normal build, serving or
-Docker command may acquire new assets or depend on this repository.
+Before replacing raw acquisition in InfinityDB: retain cached original SVG
+identities, reviewed override propagation, ambiguous source-name diagnostics
+and full source pinning; connect the independent raw report to the maintained
+`army-symbol-build.json` and processing checkpoints; verify end-to-end
+parity using the current consumer. No normal build, serving or Docker
+command may acquire new assets or depend on this repository.
