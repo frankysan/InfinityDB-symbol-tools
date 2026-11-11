@@ -1,10 +1,10 @@
 # InfinityDB symbol tools
 
-Source-side tooling for Infinity SVG evidence. This repository is intended to
-own **raw acquisition**, not application-specific symbol interpretation or
-publication. It contains no third-party symbol images, logos, fonts, or raw
-Army data. The MIT code license does not grant any rights over downloaded
-assets.
+Independent tooling for Infinity SVG acquisition, reviewed overrides,
+font resolution/text conversion, duplicate detection and compression.
+InfinityDB retains authoritative source selection and browser publication.
+This repository contains no third-party SVGs, logos, font files or raw
+Army data. The MIT code license does not grant rights over acquired assets.
 
 ## Current scope
 
@@ -16,11 +16,13 @@ provenance bound to the supplied Army ZIP. It also records fetched and
 HTTP-404-unavailable URLs in a separate `.raw-report.json` report.
 It does not modify InfinityDB.
 
-The application repository remains authoritative for:
-- Which Army, legacy and static declarations contribute symbol URLs.
-- Category and archive path selection, alias handling and URL collisions.
-- Reviewed overrides, canonical SVG transformations, deduplication, fonts,
-  browser mapping, publication and release packaging.
+The application repository remains authoritative for which Army, legacy
+and static declarations contribute URLs, source/reference identities,
+browser-facing symbol mappings, static asset placement and release packaging.
+The **symbol-tools** repository should own reviewed SVG override application,
+upstream identity propagation, font substitution/text-to-path processing,
+duplicate detection and rendering-validated compression. These operations
+are distinct from application publication.
 
 The raw retrieval/provenance implementation is **not yet a pipeline cutover**.
 It does not implement override propagation, reuse of verified upstream caches,
@@ -69,9 +71,40 @@ A v1 plan contains `format`, `formatVersion`, `inputArtifact`
 InfinityDB's existing, reviewed source discovery; the validator does not
 infer gameplay identities or invent aliases.
 
+## SVG processing components (first extraction slice)
+
+The original `svg_processor` and `svg_compress` implementations have
+been copied here with their source-facing test fixtures. Reviewed SVG
+font aliases are packaged as `font-aliases.json`; no font files are bundled.
+Their existing CLI entrypoints are now `infinity-symbol-fonts` and
+`infinity-symbol-compress`.
+
+The standalone `override_processing.resolve_reviewed_overrides` engine
+also handles reviewed direct overrides, category-scoped propagation
+when original upstream SHA-256 identities match, conflicts, and
+unused overrides. It takes a separately reviewed URL-to-*override*
+lookup path mapping; **override paths are not assumed to be raw ZIP
+archive paths**. It does not ship SVG artwork, guess which override
+is authoritative, or yet produce the final processed handoff.
+
+Install optional Python processing dependencies separately:
+
+```powershell
+python -m pip install -e ".[test,processing]"
+python -m pytest -q
+```
+
+Actual font conversion/compression additionally requires the selected
+external tools, including Inkscape or resvg and (for compression) SVGO.
+Their versions and rendering tolerances must be pinned in processing
+provenance before output can replace an InfinityDB artifact. This first
+slice does **not** yet relocate the `symbol_work` orchestration,
+reviewed override files or their manifest lifecycle.
+
 ## Development
 
-Python 3.11 or newer, standard library only at runtime.
+Python 3.11 or newer; acquisition and read-only validation use only the
+standard library at runtime.
 
 ```powershell
 python -m pip install -e ".[test]"
@@ -80,13 +113,15 @@ python -m pytest -q
 
 All tests run offline using simulated HTTP responses. GitHub Actions checks
 the installed package on Windows, Ubuntu and macOS. No other repository is
-needed to install or test this acquisition stage.
+needed to install or test acquisition or the lightweight processing fixtures.
 
 ## Cutover prerequisites
 
-Before replacing raw acquisition in InfinityDB: retain cached original SVG
-identities, reviewed override propagation, ambiguous source-name diagnostics
-and full source pinning; connect the independent raw report to the maintained
-`army-symbol-build.json` and processing checkpoints; verify end-to-end
-parity using the current consumer. No normal build, serving or Docker
-command may acquire new assets or depend on this repository.
+Before retiring the in-tree pipeline, transfer reviewed override selection
+and upstream hash propagation into a versioned processed-result manifest;
+separate SVG font substitution from InfinityDB's **browser font packaging**;
+migrate `symbol_work` stage orchestration and checkpoints; then compare
+the new pipeline on representative source archives, overrides and rendering
+tools. InfinityDB should verify/import the final processed artifact and
+publish semantic browser paths without recompressing it. Normal builds,
+serving and Docker must remain offline and independent of this repository.

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "overrides": [
+    {
+      "reference": "nasalizationrg-regular",
+      "lookup": "Nasalization",
+      "subfamily": "Regular",
+      "weight": "400"
+    },
+    {
+      "reference": "jura-bold",
+      "lookup": "Jura",
+      "subfamily": "Bold",
+      "weight": "700"
+    },
+    {
+      "reference": "microgrammadbolext",
+      "lookup": "MicrogrammaD-BoldExte"
+    },
+    {
+      "reference": "bank gothic bt",
+      "lookup": "BankGothicBT-Medium"
+    },
+    {
+      "reference": "adventpro-semibold",
+      "lookup": "Advent Pro",
+      "subfamily": "SemiBold",
+      "weight": "600"
+    },
+    {
+      "reference": "octinstencilrg-regular",
+      "lookup": "Octin Stencil",
+      "subfamily": "Regular",
+      "weight": "400"
+    }
+  ]
+}

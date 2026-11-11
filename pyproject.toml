@@ -11,9 +11,20 @@ dependencies = []
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+processing = [
+    "fonttools>=4",
+    "cssselect2>=0.7",
+    "tinycss2>=1.2",
+    "Pillow>=10",
+]
 
 [project.scripts]
 infinity-symbol-source = "infinity_symbol_tools.cli:main"
+infinity-symbol-fonts = "infinity_symbol_tools.svg_processor:main"
+infinity-symbol-compress = "infinity_symbol_tools.svg_compress:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+infinity_symbol_tools = ["font-aliases.json"]
