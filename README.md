@@ -80,12 +80,40 @@ Their existing CLI entrypoints are now `infinity-symbol-fonts` and
 `infinity-symbol-compress`.
 
 The standalone `override_processing.resolve_reviewed_overrides` engine
-also handles reviewed direct overrides, category-scoped propagation
-when original upstream SHA-256 identities match, conflicts, and
-unused overrides. It takes a separately reviewed URL-to-*override*
-lookup path mapping; **override paths are not assumed to be raw ZIP
-archive paths**. It does not ship SVG artwork, guess which override
-is authoritative, or yet produce the final processed handoff.
+handles reviewed direct overrides, category-scoped propagation when
+original upstream SHA-256 identities match, conflicts, and unused
+overrides. It takes a separately reviewed URL-to-*override* lookup
+path mapping; **override paths are not raw ZIP archive paths**.
+
+The new `infinity-symbol-overrides` command accepts that pinned
+lookup plan, the original Army ZIP and raw ZIP/provenance/report, and
+locally reviewed override SVGs. It validates every raw source outcome
+and produces an immutable `EFFECTIVE-SYMBOLS ...zip`, v3 provenance
+and a version-1 `.effective-report.json` that records:
+
+- Exact input plan/lookup/raw report, raw ZIP and Army hashes.
+- Original upstream hashes (including missing raw sources), direct
+  and propagated override identities and effective output hashes.
+- Unused override paths, raw 404s and effective unavailability.
+- `overrides: completed` with font audit, deduplication, text
+  conversion and compression **all pending**.
+
+To generate the lookup plan, use the InfinityDB checkout:
+
+```powershell
+.\.venv\Scripts\python.exe -m tools.export_symbol_override_lookups --snapshot "data/raw/JSON example.zip" --manifest "data/manifests/snapshots/JSON example.json" --source-plan local/symbol-source-plan.json --output local/symbol-override-lookups.json
+```
+
+Then process the raw source in this repository:
+
+```powershell
+infinity-symbol-overrides --source-plan symbol-source-plan.json --override-lookups symbol-override-lookups.json --army "JSON example.zip" --raw-archive "SYMBOLS example.zip" --raw-manifest "SYMBOLS example.json" --raw-report "SYMBOLS example.raw-report.json" --overrides local/image_overrides --destination data/effective --manifest-dir data/manifests/snapshots
+```
+
+These are **intermediate research/build artifacts**, not ready-to-publish
+browser symbols. No font files or override images are redistributed.
+The remaining processing stages must produce their own validated
+outputs before InfinityDB can consume a final processed handoff.
 
 Install optional Python processing dependencies separately:
 
