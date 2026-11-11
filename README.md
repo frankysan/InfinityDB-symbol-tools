@@ -112,8 +112,19 @@ infinity-symbol-overrides --source-plan symbol-source-plan.json --override-looku
 
 These are **intermediate research/build artifacts**, not ready-to-publish
 browser symbols. No font files or override images are redistributed.
-The remaining processing stages must produce their own validated
-outputs before InfinityDB can consume a final processed handoff.
+
+The next independent stage is `infinity-symbol-preflight`. It verifies
+the complete effective ZIP against its v3 provenance and intermediate
+report, then produces `svg-preflight.json` with the same structural
+parse/text/font-declaration fields and counters as InfinityDB's existing
+SVG preflight. A separate stage receipt pins the report and effective
+archive SHA-256; it records `passed` or `failed`. The stage reads but
+does **not** modify the override artifact or mark font resolution,
+deduplication, conversion or compression as complete.
+
+```powershell
+infinity-symbol-preflight --effective-archive "EFFECTIVE-SYMBOLS example.zip" --effective-manifest "EFFECTIVE-SYMBOLS example.json" --effective-report "EFFECTIVE-SYMBOLS example.effective-report.json" --output data/reports/svg-preflight.json --receipt data/reports/svg-preflight-state.json
+```
 
 Install optional Python processing dependencies separately:
 
