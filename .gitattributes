@@ -1,2 +1,9 @@
-# Auto detect text files and perform LF normalization
+# Canonical source and documentation line endings.
 * text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+LICENSE text eol=lf
