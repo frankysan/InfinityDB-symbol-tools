@@ -113,7 +113,7 @@ infinity-symbol-overrides --source-plan symbol-source-plan.json --override-looku
 These are **intermediate research/build artifacts**, not ready-to-publish
 browser symbols. No font files or override images are redistributed.
 
-The next independent stages are `infinity-symbol-preflight` and
+The read-only audit stages are `infinity-symbol-preflight` and
 `infinity-symbol-font-audit`.
 
 The first stage is `infinity-symbol-preflight`. It verifies
@@ -163,6 +163,28 @@ fallback evidence if rendering fails, but a nonzero visual-render
 error count produces a **failed** receipt rather than a completed
 deduplication claim. CSV summary timing can vary between runs; its
 exact produced bytes are pinned in the receipt.
+
+The next independent stage is `infinity-symbol-text-conversion`.
+It requires the **passed duplicate-stage receipt and its three CSV
+reports**, plus the pinned font audit and original effective ZIP.
+It verifies the canonical mapping against the source hashes and CSV
+rows, rechecks font aliases, font resolution and installed font-file
+hashes, then runs the original text converter **only for canonical
+text-bearing representatives**. Canonical SVGs with no active text
+are retained unchanged; redundant source identities remain in the
+mapping, not in the intermediate output ZIP.
+
+```powershell
+infinity-symbol-text-conversion --effective-archive "EFFECTIVE-SYMBOLS example.zip" --effective-manifest "EFFECTIVE-SYMBOLS example.json" --effective-report "EFFECTIVE-SYMBOLS example.effective-report.json" --font-report data/reports/font-audit.json --font-receipt data/reports/font-audit-state.json --duplicate-receipt data/reports/duplicate-state.json --duplicate-groups data/reports/duplicates/duplicate-groups.csv --duplicate-errors data/reports/duplicates/duplicate-render-errors.csv --duplicate-summary data/reports/duplicates/duplicate-summary.csv --output-archive data/intermediate/CANONICAL.zip --conversion-report data/reports/svg-text-to-path-report.csv --conversion-summary data/reports/text-conversion-summary.csv --receipt data/reports/text-conversion-state.json --converter inkscape-shell --jobs 2
+```
+
+The result is a deterministic intermediate canonical ZIP (not a
+publication artifact), the existing two conversion CSVs, and a stage
+receipt pinned to the source, font evidence, duplicate evidence,
+converter/version and per-member output SHA-256. Conversion errors
+or remaining active text yield a failed receipt and diagnostics but
+**no output ZIP**. No previous report or artifact is overwritten.
+Final visual fidelity and compression remain pending.
 
 Install optional Python processing dependencies separately:
 

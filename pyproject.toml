@@ -24,6 +24,7 @@ infinity-symbol-overrides = "infinity_symbol_tools.effective_processing:main"
 infinity-symbol-preflight = "infinity_symbol_tools.svg_preflight:main"
 infinity-symbol-font-audit = "infinity_symbol_tools.svg_font_audit:main"
 infinity-symbol-duplicates = "infinity_symbol_tools.svg_duplicates:main"
+infinity-symbol-text-conversion = "infinity_symbol_tools.svg_text_conversion:main"
 infinity-symbol-fonts = "infinity_symbol_tools.svg_processor:main"
 infinity-symbol-compress = "infinity_symbol_tools.svg_compress:main"
 
