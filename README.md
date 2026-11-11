@@ -145,6 +145,25 @@ Unresolved or ambiguous effective font references produce a failed
 receipt and a reproducible diagnostic report; later processing stages
 must not consume that failed audit.
 
+The next optional stage is `infinity-symbol-duplicates`. It consumes the
+unchanged effective ZIP and a **passed, hash-pinned font-audit receipt**,
+verifies every SVG member and classification, and runs the ported exact-
+and visual-duplicate detector. It emits the existing three CSV reports,
+a stable canonical URL/path mapping and a separate stage receipt that
+pins each CSV SHA-256, renderer/version, render size and font-audit
+evidence. It never modifies the source ZIP.
+
+```powershell
+infinity-symbol-duplicates --effective-archive "EFFECTIVE-SYMBOLS example.zip" --effective-manifest "EFFECTIVE-SYMBOLS example.json" --effective-report "EFFECTIVE-SYMBOLS example.effective-report.json" --font-report data/reports/font-audit.json --font-receipt data/reports/font-audit-state.json --reports-directory data/reports/duplicates --receipt data/reports/duplicate-state.json --render-size 512 --renderer resvg --jobs 4
+```
+
+The renderer (default: `resvg`) and its runtime dependencies must
+be installed separately. The exact-byte detector remains usable as
+fallback evidence if rendering fails, but a nonzero visual-render
+error count produces a **failed** receipt rather than a completed
+deduplication claim. CSV summary timing can vary between runs; its
+exact produced bytes are pinned in the receipt.
+
 Install optional Python processing dependencies separately:
 
 ```powershell
