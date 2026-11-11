@@ -22,6 +22,7 @@ processing = [
 infinity-symbol-source = "infinity_symbol_tools.cli:main"
 infinity-symbol-overrides = "infinity_symbol_tools.effective_processing:main"
 infinity-symbol-preflight = "infinity_symbol_tools.svg_preflight:main"
+infinity-symbol-font-audit = "infinity_symbol_tools.svg_font_audit:main"
 infinity-symbol-fonts = "infinity_symbol_tools.svg_processor:main"
 infinity-symbol-compress = "infinity_symbol_tools.svg_compress:main"
 

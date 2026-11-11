@@ -113,7 +113,10 @@ infinity-symbol-overrides --source-plan symbol-source-plan.json --override-looku
 These are **intermediate research/build artifacts**, not ready-to-publish
 browser symbols. No font files or override images are redistributed.
 
-The next independent stage is `infinity-symbol-preflight`. It verifies
+The next independent stages are `infinity-symbol-preflight` and
+`infinity-symbol-font-audit`.
+
+The first stage is `infinity-symbol-preflight`. It verifies
 the complete effective ZIP against its v3 provenance and intermediate
 report, then produces `svg-preflight.json` with the same structural
 parse/text/font-declaration fields and counters as InfinityDB's existing
@@ -125,6 +128,22 @@ deduplication, conversion or compression as complete.
 ```powershell
 infinity-symbol-preflight --effective-archive "EFFECTIVE-SYMBOLS example.zip" --effective-manifest "EFFECTIVE-SYMBOLS example.json" --effective-report "EFFECTIVE-SYMBOLS example.effective-report.json" --output data/reports/svg-preflight.json --receipt data/reports/svg-preflight-state.json
 ```
+
+After a passed structural preflight, `infinity-symbol-font-audit`
+resolves used font references using the installed font index and the
+reviewed alias configuration. It preserves InfinityDB's established
+font-audit report fields and emits a second receipt pinned to both
+preflight files, the alias configuration and hashes of the **actual
+installed font files** used for resolution. No font binaries or
+absolute font paths appear in either report.
+
+```powershell
+infinity-symbol-font-audit --effective-archive "EFFECTIVE-SYMBOLS example.zip" --effective-manifest "EFFECTIVE-SYMBOLS example.json" --effective-report "EFFECTIVE-SYMBOLS example.effective-report.json" --preflight-report data/reports/svg-preflight.json --preflight-receipt data/reports/svg-preflight-state.json --output data/reports/font-audit.json --receipt data/reports/font-audit-state.json
+```
+
+Unresolved or ambiguous effective font references produce a failed
+receipt and a reproducible diagnostic report; later processing stages
+must not consume that failed audit.
 
 Install optional Python processing dependencies separately:
 
