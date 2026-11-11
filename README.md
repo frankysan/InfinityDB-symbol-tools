@@ -200,6 +200,31 @@ provenance before output can replace an InfinityDB artifact. This first
 slice does **not** yet relocate the `symbol_work` orchestration,
 reviewed override files or their manifest lifecycle.
 
+## Canonical render-validated compression
+
+`infinity-symbol-canonical-compression` accepts the canonical-only
+text-conversion ZIP and its passed, SHA-256-pinned receipt. It verifies
+every ZIP member and source hash, rejects remaining active SVG text,
+then invokes the existing display-aware compressor using a **balanced**
+(default) or **small** raster-validated profile. Both resvg and
+Inkscape are supported as explicitly selected renderers. The selected
+renderer and SVGO versions, target sizes, DPRs and tolerance settings
+are recorded in a new `compression` stage receipt.
+
+```powershell
+infinity-symbol-canonical-compression --canonical-archive data/intermediate/CANONICAL.zip --conversion-receipt data/reports/text-conversion-state.json --output-archive data/intermediate/COMPRESSED.zip --receipt data/reports/compression-state.json --report data/reports/compression-report.csv --candidates-report data/reports/compression-candidates.csv --run-report data/reports/compression-run.json --profile balanced --renderer resvg --jobs 2
+```
+
+The compressed ZIP retains the canonical relative paths, with a
+per-member SHA-256 mapping to the text-converted source. All three
+original compressor reports are pinned. Missing output members,
+unresolved render/SVGO errors, missing tool versions, or a mismatch
+in the input receipt abort the stage without publishing an output.
+The original canonical ZIP is not modified. This remains an
+**intermediate**, not an accepted browser publication artifact:
+production rendering parity and an InfinityDB-side final verifier
+are still required.
+
 ## Development
 
 Python 3.11 or newer; acquisition and read-only validation use only the

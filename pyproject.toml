@@ -27,6 +27,7 @@ infinity-symbol-duplicates = "infinity_symbol_tools.svg_duplicates:main"
 infinity-symbol-text-conversion = "infinity_symbol_tools.svg_text_conversion:main"
 infinity-symbol-fonts = "infinity_symbol_tools.svg_processor:main"
 infinity-symbol-compress = "infinity_symbol_tools.svg_compress:main"
+infinity-symbol-canonical-compression = "infinity_symbol_tools.svg_canonical_compression:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
