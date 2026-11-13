@@ -75,6 +75,50 @@ class SnapshotManifestPublicationTests(TestCase):
             provenance.write_snapshot_manifest(archive, directory, **modified)
         self.assertEqual(manifest.read_bytes(), original)
 
+    def test_crlf_manifest_is_different_even_with_identical_decoded_json(self) -> None:
+        archive, directory, args = _pair(self.root)
+        manifest = provenance.write_snapshot_manifest(archive, directory, **args)
+        previous = manifest.read_bytes().replace(b"\n", b"\r\n")
+        manifest.write_bytes(previous)
+        with self.assertRaisesRegex(provenance.SnapshotProvenanceError, "different content"):
+            provenance.write_snapshot_manifest(archive, directory, **args)
+        self.assertEqual(manifest.read_bytes(), previous)
+
+    def test_transaction_requires_new_manifest_even_for_identical_content(self) -> None:
+        archive, directory, args = _pair(self.root)
+        manifest = provenance.write_snapshot_manifest(archive, directory, **args)
+        previous = manifest.read_bytes()
+        with self.assertRaisesRegex(provenance.SnapshotProvenanceError, "already exists"):
+            provenance.write_snapshot_manifest(archive, directory, require_new=True, **args)
+        self.assertEqual(manifest.read_bytes(), previous)
+
+    def test_transaction_rejects_race_winner_without_deleting_it(self) -> None:
+        for identical in (True, False):
+            with self.subTest(identical=identical):
+                archive, directory, args = _pair(self.root / str(identical))
+                target = directory / f"{archive.stem}.json"
+                original_link = provenance.os.link
+                winner = b""
+
+                def competing_link(
+                    source: Path, destination: Path, *,
+                    same: bool = identical, link=original_link,
+                ) -> None:
+                    nonlocal winner
+                    winner = source.read_bytes() if same else b"other provenance\n"
+                    destination.write_bytes(winner)
+                    link(source, destination)
+
+                with patch.object(provenance.os, "link", competing_link):
+                    with self.assertRaisesRegex(
+                        provenance.SnapshotProvenanceError, "already exists"
+                    ):
+                        provenance.write_snapshot_manifest(
+                            archive, directory, require_new=True, **args
+                        )
+                self.assertEqual(target.read_bytes(), winner)
+                self.assertFalse(target.with_suffix(".json.tmp").exists())
+
     def test_stale_stage_is_never_deleted_or_replaced(self) -> None:
         archive, directory, args = _pair(self.root)
         directory.mkdir(parents=True)
@@ -114,11 +158,15 @@ class SnapshotManifestPublicationTests(TestCase):
                 competitor = canonical if identical else b"conflicting provenance\n"
                 original_link = provenance.os.link
 
-                def competing_link(source: Path, destination: Path) -> None:
-                    self.assertEqual(destination, target)
-                    self.assertEqual(source.read_bytes(), canonical)
-                    target.write_bytes(competitor)
-                    original_link(source, destination)
+                def competing_link(
+                    source: Path, destination: Path, *,
+                    expected_target: Path = target, expected_payload: bytes = canonical,
+                    winner: bytes = competitor, link=original_link,
+                ) -> None:
+                    self.assertEqual(destination, expected_target)
+                    self.assertEqual(source.read_bytes(), expected_payload)
+                    destination.write_bytes(winner)
+                    link(source, destination)
 
                 with patch.object(provenance.os, "link", competing_link):
                     if identical:

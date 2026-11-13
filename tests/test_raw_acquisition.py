@@ -86,6 +86,48 @@ def _opener(url: str, *, timeout: int):
     return Response(url, {CUBE_URL: CUBE_SVG, UNIT_URL: UNIT_SVG}[url])
 
 
+@pytest.mark.parametrize("collision", ["identical-manifest", "different-manifest", "archive"])
+def test_manifest_race_preserves_other_acquisition_output(
+    tmp_path: Path, monkeypatch, collision: str,
+) -> None:
+    from infinity_symbol_tools import snapshot_provenance as provenance
+
+    army, plan = _setup(tmp_path)
+    link = provenance.os.link
+    winner = b""
+    target = None
+
+    def competing_link(source: Path, destination: Path) -> None:
+        nonlocal winner, target
+        target = destination
+        winner = source.read_bytes() if collision == "identical-manifest" else b"other acquisition\n"
+        destination.write_bytes(winner)
+        link(source, destination)
+
+    if collision == "archive":
+        original_publish = raw_acquisition._publish_copy
+
+        def competing_copy(source, destination):
+            nonlocal target, winner
+            target = destination
+            winner = b"other acquisition's source ZIP"
+            destination.write_bytes(winner)
+            return original_publish(source, destination)
+
+        monkeypatch.setattr(raw_acquisition, "_publish_copy", competing_copy)
+    else:
+        monkeypatch.setattr(provenance.os, "link", competing_link)
+    with pytest.raises((provenance.SnapshotProvenanceError, FileExistsError)):
+        acquire_raw_symbols(
+            plan, army, tmp_path / "symbols", tmp_path / "manifests",
+            acquired_at=STAMP, opener=_opener, delay=0, project_root=tmp_path,
+        )
+    assert target is not None and target.read_bytes() == winner
+    assert list((tmp_path / "symbols").glob("*.zip")) == ([target] if collision == "archive" else [])
+    assert not list((tmp_path / "symbols").glob("*.raw-report.json"))
+    assert not list((tmp_path / "manifests").glob("*.tmp"))
+
+
 def test_pinned_raw_acquisition_emits_source_bytes_and_v3_provenance(tmp_path: Path) -> None:
     army, plan = _setup(tmp_path)
     delays: list[float] = []

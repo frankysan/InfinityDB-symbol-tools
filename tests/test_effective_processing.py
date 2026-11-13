@@ -125,6 +125,45 @@ def _process(
     )
 
 
+@pytest.mark.parametrize("collision", ["identical-manifest", "different-manifest", "archive"])
+def test_effective_manifest_race_preserves_other_producer_output(
+    tmp_path: Path, monkeypatch, collision: str,
+) -> None:
+    from infinity_symbol_tools import snapshot_provenance as provenance
+
+    paths = _prepare(tmp_path)
+    link = provenance.os.link
+    winner = b""
+    target = None
+
+    def competing_link(source: Path, destination: Path) -> None:
+        nonlocal winner, target
+        target = destination
+        winner = source.read_bytes() if collision == "identical-manifest" else b"other processing run\n"
+        destination.write_bytes(winner)
+        link(source, destination)
+
+    if collision == "archive":
+        original_open = Path.open
+
+        def competing_open(path, mode="r", *args, **kwargs):
+            nonlocal target, winner
+            if mode == "xb" and path.parent == tmp_path / "effective":
+                target = path
+                winner = b"other processing run's source ZIP"
+                path.write_bytes(winner)
+            return original_open(path, mode, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "open", competing_open)
+    else:
+        monkeypatch.setattr(provenance.os, "link", competing_link)
+    with pytest.raises((provenance.SnapshotProvenanceError, FileExistsError)):
+        _process(tmp_path, paths)
+    assert target is not None and target.read_bytes() == winner
+    assert list((tmp_path / "effective").glob("*.zip")) == ([target] if collision == "archive" else [])
+    assert not list((tmp_path / "effective-manifests").glob("*.tmp"))
+
+
 def test_processed_override_stage_keeps_raw_upstream_and_effective_hashes(
     tmp_path: Path,
 ) -> None:

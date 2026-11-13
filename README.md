@@ -71,6 +71,14 @@ change raw/effective ZIP or stage-receipt publication rules. The companion
 but is **not** the application's processed-symbol build manifest. The new raw archive must not yet be substituted
 into an InfinityDB `build_symbols --resume` run without that build manifest.
 
+Raw acquisition and effective processing require a newly created provenance
+manifest, including when a competing run publishes identical bytes. Rollback
+therefore cannot delete another run's manifest. Direct `write_snapshot_manifest`
+calls remain idempotent by default, using exact UTF-8 bytes; CRLF and LF differ.
+The optional producer-relative `snapshot.archive.path` is informational.
+Consumers explicitly select a transferred archive and verify its hashes without
+rewriting provenance or resolving the producer's path on the receiving host.
+
 A v1 plan contains `format`, `formatVersion`, `inputArtifact`
 (`name`, `sha256`), `sourceDocumentCount` and sorted `requests`
 (`url`, `archivePath`). URL meaning and request authority come from

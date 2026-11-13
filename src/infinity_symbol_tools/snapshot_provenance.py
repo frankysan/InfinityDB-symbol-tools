@@ -162,8 +162,13 @@ def write_snapshot_manifest(
     language: str | None = None,
     source_data_changed_on: date | None = None,
     input_artifact: Path | None = None,
+    require_new: bool = False,
 ) -> Path:
-    """Write one immutable archive-labeled manifest as deterministic JSON."""
+    """Write immutable canonical JSON; optionally require ownership of a new file.
+
+    Acquisition transactions that may roll back must set ``require_new`` so
+    they never mistake an idempotently reused manifest for their own output.
+    """
     document = build_snapshot_manifest(
         archive,
         snapshot_type=snapshot_type,
@@ -176,13 +181,15 @@ def write_snapshot_manifest(
         input_artifact=input_artifact,
     )
     path = manifest_directory / f"{archive.stem}.json"
-    payload = _canonical_pretty_json(document)
+    payload = _canonical_pretty_json(document).encode("utf-8")
 
     manifest_directory.mkdir(parents=True, exist_ok=True)
     if path.is_symlink():
         raise SnapshotProvenanceError(f"Snapshot manifest destination is a symlink: {path}")
     if path.exists():
-        if not path.is_file() or path.read_text(encoding="utf-8") != payload:
+        if require_new:
+            raise SnapshotProvenanceError(f"Snapshot manifest already exists: {path}")
+        if not path.is_file() or path.read_bytes() != payload:
             raise SnapshotProvenanceError(
                 f"Snapshot manifest already exists with different content: {path}"
             )
@@ -191,17 +198,21 @@ def write_snapshot_manifest(
     temporary = path.with_suffix(".json.tmp")
     created = False
     try:
-        with temporary.open("x", encoding="utf-8", newline="\n") as stream:
+        with temporary.open("xb") as stream:
             created = True
             stream.write(payload)
         try:
             # Publish complete provenance without replacing a competing acquisition.
             os.link(temporary, path)
         except FileExistsError as exc:
+            if require_new:
+                raise SnapshotProvenanceError(
+                    f"Snapshot manifest already exists: {path}"
+                ) from exc
             if (
                 path.is_symlink()
                 or not path.is_file()
-                or path.read_text(encoding="utf-8") != payload
+                or path.read_bytes() != payload
             ):
                 raise SnapshotProvenanceError(
                     f"Snapshot manifest already exists with different content: {path}"

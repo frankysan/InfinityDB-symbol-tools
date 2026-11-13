@@ -329,6 +329,7 @@ def apply_pinned_overrides(
                 snapshot_type="symbols", acquired_at=processed_at,
                 source_url=ASSET_ROOT_URL, document_count=len(files),
                 project_root=project_root or Path.cwd(), input_artifact=army_archive,
+                require_new=True,
             )
             if created != manifest:
                 raise EffectiveProcessingError("Unexpected effective snapshot manifest path")

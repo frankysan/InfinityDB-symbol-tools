@@ -80,6 +80,10 @@ dates describe that project's development history, not standalone releases.
   Matching canonical JSON is idempotent; conflicting published bytes, symlink
   destinations and occupied staging fail without replacing the first writer.
   Source ZIPs, processing stages, receipts and the consumer format are unchanged.
+- **Acquisition + Data processing:** Prevented raw acquisition and effective
+  processing rollback from deleting a competing run's identical manifest.
+  These transactions require newly created provenance; direct manifest calls
+  retain byte-exact idempotent reuse, including line-ending checks.
 
 ### Upgrade notes
 

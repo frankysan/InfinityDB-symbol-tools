@@ -177,6 +177,7 @@ def acquire_raw_symbols(
                 document_count=len(assets),
                 project_root=project_root,
                 input_artifact=army_archive,
+                require_new=True,
             )
             if created != manifest:
                 raise SourcePlanError("Published symbol manifest path differs from expected path")
