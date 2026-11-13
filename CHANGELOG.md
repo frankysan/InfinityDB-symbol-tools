@@ -73,6 +73,14 @@ dates describe that project's development history, not standalone releases.
   source selection and publication. InfinityDB remains authoritative for URL
   meaning, browser mappings, compatibility aliases and release packaging.
 
+### Fixed
+
+- **Acquisition + Data processing:** Protected immutable v3 snapshot
+  manifests for raw and derived symbol archives from concurrent overwrite.
+  Matching canonical JSON is idempotent; conflicting published bytes, symlink
+  destinations and occupied staging fail without replacing the first writer.
+  Source ZIPs, processing stages, receipts and the consumer format are unchanged.
+
 ### Upgrade notes
 
 - **Project infrastructure:** Requires Python 3.11 or newer. Acquisition and

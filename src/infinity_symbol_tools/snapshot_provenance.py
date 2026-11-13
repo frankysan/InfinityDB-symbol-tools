@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import zipfile
 from datetime import date, datetime
@@ -178,17 +179,40 @@ def write_snapshot_manifest(
     payload = _canonical_pretty_json(document)
 
     manifest_directory.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        raise SnapshotProvenanceError(f"Snapshot manifest destination is a symlink: {path}")
     if path.exists():
-        existing = path.read_text(encoding="utf-8")
-        if existing != payload:
+        if not path.is_file() or path.read_text(encoding="utf-8") != payload:
             raise SnapshotProvenanceError(
                 f"Snapshot manifest already exists with different content: {path}"
             )
         return path
 
     temporary = path.with_suffix(".json.tmp")
-    temporary.write_text(payload, encoding="utf-8", newline="\n")
-    temporary.replace(path)
+    created = False
+    try:
+        with temporary.open("x", encoding="utf-8", newline="\n") as stream:
+            created = True
+            stream.write(payload)
+        try:
+            # Publish complete provenance without replacing a competing acquisition.
+            os.link(temporary, path)
+        except FileExistsError as exc:
+            if (
+                path.is_symlink()
+                or not path.is_file()
+                or path.read_text(encoding="utf-8") != payload
+            ):
+                raise SnapshotProvenanceError(
+                    f"Snapshot manifest already exists with different content: {path}"
+                ) from exc
+    except FileExistsError as exc:
+        raise SnapshotProvenanceError(
+            f"Snapshot manifest staging already exists: {temporary}"
+        ) from exc
+    finally:
+        if created:
+            temporary.unlink(missing_ok=True)
     return path
 
 

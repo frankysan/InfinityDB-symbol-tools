@@ -60,9 +60,15 @@ infinity-symbol-source --plan symbol-source-plan.json --army "JSON example.zip" 
 Acquisition validates returned XML without altering the source bytes. Only
 HTTP 404 is recorded as unavailable; other HTTP errors, invalid SVGs and
 unexpected redirects fail without publishing a new ZIP/manifest. Existing
-archives are never overwritten. The companion `.raw-report.json` identifies
-source URLs, hashes and unavailable assets, but is **not** the application's
-processed-symbol build manifest. The new raw archive must not yet be substituted
+archives are never overwritten. Snapshot provenance publication uses
+exclusive same-directory `.json.tmp` staging and no-replace hard-link
+creation: an existing v3 JSON is reusable only with identical canonical
+bytes. Different provenance, symlink destinations or occupied staging fail
+without replacing earlier evidence; inspect interrupted staging before
+cleanup. This requires a filesystem supporting hard links and does not
+change raw/effective ZIP or stage-receipt publication rules. The companion
+`.raw-report.json` identifies source URLs, hashes and unavailable assets,
+but is **not** the application's processed-symbol build manifest. The new raw archive must not yet be substituted
 into an InfinityDB `build_symbols --resume` run without that build manifest.
 
 A v1 plan contains `format`, `formatVersion`, `inputArtifact`
