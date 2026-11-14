@@ -82,9 +82,13 @@ runtime/browser publication.
 New ignored source/override originals and working outputs belong in
 purpose-specific `local/data/symbols/`, `local/research/symbols/`,
 `local/validation/symbols/`, `local/handoffs/symbols/` or
-`local/work/symbols/`, with source SHA/run ID in the path. Existing
-documented `data/` command examples and `local/image_overrides/`
-are compatibility paths, **not** permission for a blind migration.
+`local/work/symbols/`, with source SHA/run ID in the path.
+`local/image_overrides/` is the active ignored, reviewed-override source and
+Windows Syncthing Send Only folder for the Linux receiver
+`~/syncthing/infinitydb/image-overrides/`. Its folder ID and receiver location
+were preserved when the sender moved from the main InfinityDB checkout.
+Other documented `data/` command examples are compatibility paths,
+**not** permission for a blind migration.
 Do not commit upstream SVGs, downloaded fonts, raw Army data or
 private override files. The MIT code license does not cover their
 copyrights; any processed-asset publication requires the relevant
