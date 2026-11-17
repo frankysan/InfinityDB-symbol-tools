@@ -96,7 +96,12 @@ rights and the consumer's review.
 
 Update README for CLI/stage changes, this guide for development
 conventions, tests for stage guarantees, and changelog only for
-meaningful operator changes. For a bounded audit, helper, conversion
+meaningful operator changes. Record actionable code, tooling, workflow and
+instruction improvements in the [agent improvement log](AGENT_IMPROVEMENTS.md),
+following the required behavior and entry format there. Recording a suggestion
+does not authorize implementation or expand the current task.
+
+For a bounded audit, helper, conversion
 experiment or report, identify its reason, input revision, consumers,
 permanent findings and retirement trigger at creation. When fulfilled,
 retain useful accepted provenance or the reusable code, and retire
