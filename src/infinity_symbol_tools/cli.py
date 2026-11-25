@@ -9,6 +9,17 @@ from infinity_symbol_tools.raw_acquisition import acquire_raw_symbols
 from infinity_symbol_tools.source_plan import SourcePlanError, load_source_plan
 
 
+def _show_progress(completed: int, total: int, downloaded: int, unavailable: int) -> None:
+    if completed == 1 or completed % 25 == 0 or completed == total:
+        print(
+            f"SVG requests: {completed}/{total} ({completed / total:.1%}) | "
+            f"downloaded: {downloaded} | HTTP 404: {unavailable}",
+            flush=True,
+        )
+    if completed == total and downloaded:
+        print("Download phase complete; validating and writing artifacts...", flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", required=True, type=Path)
@@ -29,12 +40,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         plan = load_source_plan(args.plan, army_archive=args.army)
         if args.acquire:
+            print(f"Acquiring {len(plan['requests'])} raw SVGs...", flush=True)
             result = acquire_raw_symbols(
                 plan,
                 args.army,
                 args.destination,
                 args.manifest_dir,
                 delay=args.delay,
+                progress=_show_progress,
             )
     except (OSError, ValueError) as exc:
         parser.exit(1, f"ERROR: {exc}\n")

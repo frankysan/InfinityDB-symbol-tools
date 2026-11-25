@@ -53,8 +53,13 @@ as a pinned contract.
   observations, proposed improvement, expected benefit and status;
   distinguish observations from hypotheses and exclude secrets and private
   source material. Recording a suggestion does not authorize implementing
-  it or expanding scope. Update its disposition when resolved and mention
-  relevant new entries in the handoff.
+  it or expanding scope. Keep the log limited to actionable, unresolved
+  items. After implementation and required validation are complete, move
+  any durable guidance into its owning documentation and remove the entry
+  in the same change. Remove declined or superseded entries once their
+  decision is recorded. Use Git history for past entries; do not create a
+  completed-items archive. Mention relevant additions and removals in the
+  handoff.
 - Apply the repository-specific [checks and documentation lifecycle](docs/DEVELOPMENT.md)
   to each coherent change. Design and run focused checks during implementation.
   Record deferred checks only for a concrete blocker, with exact inputs,

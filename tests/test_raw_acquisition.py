@@ -317,6 +317,34 @@ def test_manifest_write_failure_removes_new_archive(
     assert list((tmp_path / "symbols").glob("SYMBOLS *")) == []
 
 
+def test_acquisition_cli_reports_progress_during_downloads(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    army, plan = _setup(tmp_path)
+    plan_path = tmp_path / "requests.json"
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    output = []
+
+    def opener(url: str, *, timeout: int):
+        output.append(capsys.readouterr().out)
+        if url == UNIT_URL:
+            raise HTTPError(url, 404, "Not Found", {}, None)
+        return _opener(url, timeout=timeout)
+
+    monkeypatch.setattr(raw_acquisition, "urlopen", opener)
+    assert main([
+        "--plan", str(plan_path), "--army", str(army), "--acquire",
+        "--destination", str(tmp_path / "raw"),
+        "--manifest-dir", str(tmp_path / "manifests"), "--delay", "0",
+    ]) == 0
+    assert "Acquiring 2 raw SVGs" in output[0]
+    assert "1/2 (50.0%) | downloaded: 1 | HTTP 404: 0" in output[1]
+    final = capsys.readouterr().out
+    assert "2/2 (100.0%) | downloaded: 1 | HTTP 404: 1" in final
+    assert "Download phase complete" in final
+    assert "Acquired 1 raw SVGs; 1 unavailable HTTP 404" in final
+
+
 def test_source_validation_cli_remains_network_free(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
 ) -> None:

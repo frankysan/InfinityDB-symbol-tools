@@ -63,6 +63,8 @@ dates describe that project's development history, not standalone releases.
 
 ### Changed
 
+- **Acquisition:** Report live request progress, downloaded and HTTP-404 counts,
+  and the transition to archive validation/publication during raw acquisition.
 - **Acquisition + Data processing:** Established an independently installable
   source-processing package with the inherited font-processing and compression
   commands available as `infinity-symbol-fonts` and `infinity-symbol-compress`.

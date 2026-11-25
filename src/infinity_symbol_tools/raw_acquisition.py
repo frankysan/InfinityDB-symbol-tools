@@ -96,12 +96,15 @@ def acquire_raw_symbols(
     sleeper: Callable[[float], Any] | None = None,
     delay: float = 0.2,
     project_root: Path | None = None,
+    progress: Callable[[int, int, int, int], None] | None = None,
 ) -> RawAcquisitionResult:
     """Fetch exact pinned URLs, recording 404s and publishing complete results atomically.
 
     A non-404 HTTP error, a redirect outside the requested URL, an invalid SVG,
     changed Army source, or a publication failure must not leave a new artifact.
     A 404 is recorded as an unavailable *source* asset, never a placeholder.
+    Optional progress receives completed, total, downloaded and unavailable counts
+    after each resolved request, before any delay or publication.
     """
     validate_source_plan(plan, army_archive=army_archive)
     if delay < 0:
@@ -152,6 +155,8 @@ def acquire_raw_symbols(
                     "sha256": hashlib.sha256(body).hexdigest(),
                     "sourceMethod": "network",
                 })
+            if progress is not None:
+                progress(index + 1, len(requested), len(assets), len(missing))
             if index + 1 < len(requested) and delay:
                 sleeper(delay)
 

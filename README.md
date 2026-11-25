@@ -57,6 +57,9 @@ To explicitly acquire and archive raw SVGs:
 infinity-symbol-source --plan symbol-source-plan.json --army "JSON example.zip" --acquire --destination data/raw/symbols --manifest-dir data/manifests/snapshots
 ```
 
+Acquisition prints an initial request count, progress after the first request,
+then every 25 requests and at the end of retrieval, including downloaded and
+HTTP-404 counts. The final artifact summary follows validation and publication.
 Acquisition validates returned XML without altering the source bytes. Only
 HTTP 404 is recorded as unavailable; other HTTP errors, invalid SVGs and
 unexpected redirects fail without publishing a new ZIP/manifest. Existing

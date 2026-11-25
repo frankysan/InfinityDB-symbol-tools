@@ -100,6 +100,10 @@ meaningful operator changes. Record actionable code, tooling, workflow and
 instruction improvements in the [agent improvement log](AGENT_IMPROVEMENTS.md),
 following the required behavior and entry format there. Recording a suggestion
 does not authorize implementation or expand the current task.
+Keep the log limited to unresolved work: remove completed entries after required
+validation, preserving durable guidance in its owning documentation. Retire
+declined or superseded entries after recording the decision; Git history
+provides the historical record without a separate completed-items archive.
 
 For a bounded audit, helper, conversion
 experiment or report, identify its reason, input revision, consumers,
